@@ -1,0 +1,298 @@
+/*eslint max-nested-callbacks: 0*/
+/*global describe, it*/
+'use strict';
+
+var _ = require('lodash-node');
+var assert = require('assert');
+var fist = require('fist');
+var path = require('path');
+var supertest = require('supertest');
+
+describe('_fistlabs_unit_controller', function () {
+    function getApp(params) {
+        var core = fist(params);
+        core.install(path.join(__dirname, '../_fistlabs_unit_controller'));
+        core.alias('_fistlabs_unit_controller', '_contr');
+        return core;
+    }
+
+    it('Should have settings.viewsDir by default', function (done) {
+        var app = getApp();
+
+        app.unit({
+            name: 'foo',
+            base: '_contr'
+        });
+
+        app.ready().done(function () {
+            assert.strictEqual(app.getUnit('foo').settings.viewsDir,
+                path.join(app.params.root, 'views'));
+            done();
+        });
+    });
+
+    it('Should install engines by config passed', function (done) {
+        var app = getApp();
+        var fooEngine = require('./fixtures/engines/foo');
+
+        app.unit({
+            name: 'foo',
+            base: '_contr',
+            settings: {
+                engines: {
+                    'foo': fooEngine,
+                    'bar': path.join(__dirname, '../test/fixtures/engines/foo')
+                }
+            }
+        });
+
+        app.ready().done(function () {
+            var unit = app.getUnit('foo');
+            var engine;
+
+            engine = _.find(unit.__enginesAvailable, {
+                extname: 'foo'
+            });
+
+            assert.deepEqual(engine, {
+                extname: 'foo',
+                render: fooEngine
+            });
+
+            engine = _.find(unit.__enginesAvailable, {
+                extname: 'bar'
+            });
+
+            assert.deepEqual(engine, {
+                extname: 'bar',
+                render: fooEngine
+            });
+
+            done();
+        });
+    });
+
+    it('Should assign the unit with route', function (done) {
+        var app = getApp();
+
+        app.unit({
+            base: '_contr',
+            name: 'foo',
+            rule: '/'
+        });
+
+        app.ready().done(function () {
+            var route = app.router.getRule('foo');
+
+            assert.ok(route);
+            assert.strictEqual(route.data.name, 'foo');
+
+            done();
+        });
+    });
+
+    describe('unit._render()', function () {
+        it('Should render template with engine', function (done) {
+            var app = getApp({
+                unitSettings: {
+                    _contr: {
+                        viewsDir: path.join(__dirname, '../test/fixtures/views'),
+                        engines: {
+                            '.js': function (f, o, done) {done(new Error())},
+                            '.0.js': require('../test/fixtures/engines/0'),
+                            '0.js': function (f, o, done) {done(new Error())},
+                            '0': function (f, o, done) {done(new Error())},
+                            '.xyz': function (f, o, done) {done(new Error())}
+                        }
+                    }
+                }
+            });
+
+            app.unit({
+                name: 'index',
+                base: '_contr',
+                rule: '/',
+                defaultViewName: 'index.0.js'
+            });
+
+            supertest(app.getHandler()).
+                get('/').
+                expect('0').
+                end(done);
+        });
+
+        //  todo make asserts! just covered now
+        it('Should not lookup template a twice', function (done) {
+            var app = getApp({
+                unitSettings: {
+                    _contr: {
+                        viewsDir: path.join(__dirname, '../test/fixtures/views'),
+                        engines: {
+                            '.0.js': require('../test/fixtures/engines/0')
+                        }
+                    }
+                }
+            });
+
+            var handler = app.getHandler();
+
+            app.unit({
+                name: 'index',
+                base: '_contr',
+                rule: '/',
+                defaultViewName: 'index.0.js'
+            });
+
+            supertest(handler).
+                get('/').
+                end(function () {
+                    supertest(handler).
+                        get('/').
+                        end(done);
+                });
+        });
+
+
+        it('Should send 500 if no engine found', function (done) {
+            var app = getApp({
+                unitSettings: {
+                    _contr: {
+                        viewsDir: path.join(__dirname, '../test/fixtures/views')
+                    }
+                }
+            });
+
+            app.unit({
+                name: 'index',
+                base: '_contr',
+                rule: '/',
+                defaultViewName: 'index.0.js'
+            });
+
+            supertest(app.getHandler()).
+                get('/').
+                expect(500).
+                end(done);
+        });
+
+        it('Should send 500 if no view found', function (done) {
+            var app = getApp({
+                unitSettings: {
+                    _contr: {
+                        viewsDir: path.join(__dirname, '../test/fixtures/views'),
+                        engines: {
+                            '0.js': require('../test/fixtures/engines/0')
+                        }
+                    }
+                }
+            });
+
+            app.unit({
+                name: 'index',
+                base: '_contr',
+                rule: '/',
+                defaultViewName: 'foo-bar-baz.0.js'
+            });
+
+            supertest(app.getHandler()).
+                get('/').
+                expect(500).
+                end(done);
+        });
+    });
+
+    describe('unit.createResponseStatus()', function () {
+        it('Should respond with returned status', function (done) {
+            var app = getApp({
+                unitSettings: {
+                    _contr: {
+                        viewsDir: path.join(__dirname, '../test/fixtures/views'),
+                        engines: {
+                            '.0.js': require('../test/fixtures/engines/0')
+                        }
+                    }
+                }
+            });
+
+            app.unit({
+                name: 'index',
+                base: '_contr',
+                rule: '/',
+                defaultViewName: 'index.0.js',
+                createResponseStatus: function () {
+                    return 201;
+                }
+            });
+
+            supertest(app.getHandler()).
+                get('/').
+                expect('0').
+                expect(201).
+                end(done);
+        });
+    });
+
+    describe('unit.createResponseHeader()', function () {
+        it('Should respond with returned header', function (done) {
+            var app = getApp({
+                unitSettings: {
+                    _contr: {
+                        viewsDir: path.join(__dirname, '../test/fixtures/views'),
+                        engines: {
+                            '.0.js': require('../test/fixtures/engines/0')
+                        }
+                    }
+                }
+            });
+
+            app.unit({
+                name: 'index',
+                base: '_contr',
+                rule: '/',
+                defaultViewName: 'index.0.js',
+                createResponseHeader: function () {
+                    return {
+                        'X-Foo': 'bar'
+                    };
+                }
+            });
+
+            supertest(app.getHandler()).
+                get('/').
+                expect('X-Foo', 'bar').
+                end(done);
+        });
+    });
+
+    describe('unit.createViewOpts()', function () {
+        it('Should pass returned opts to template engine', function (done) {
+            var app = getApp({
+                unitSettings: {
+                    _contr: {
+                        viewsDir: path.join(__dirname, '../test/fixtures/views'),
+                        engines: {
+                            '.0.js': require('../test/fixtures/engines/0')
+                        }
+                    }
+                }
+            });
+
+            app.unit({
+                name: 'index',
+                base: '_contr',
+                rule: '/',
+                defaultViewName: 'return-opts.0.js',
+                createViewOpts: function () {
+                    return {
+                        foo: 'bar'
+                    };
+                }
+            });
+
+            supertest(app.getHandler()).
+                get('/').
+                expect(JSON.stringify({foo:'bar'})).
+                end(done);
+        });
+    });
+});

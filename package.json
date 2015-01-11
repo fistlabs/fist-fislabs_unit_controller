@@ -1,0 +1,42 @@
+{
+  "author": "Golyshev Dmitrii <golyshev.dmitry@yandex.ru>",
+  "bugs": {
+    "url": "https://github.com/fistlabs/fist-fistlabs_unit_controller/issues"
+  },
+  "contributors": [
+    "Golyshev Dmitrii <golyshev.dmitry@yandex.ru>"
+  ],
+  "dependencies": {
+    "lodash-node": "2.4.1",
+    "vow": "0.4.7"
+  },
+  "description": "Base controller as a unit",
+  "devDependencies": {
+    "supertest": "0.15.0",
+    "vow-fs": "0.3.4",
+    "lodash-node": "2.4.1",
+    "glob": "4.3.2",
+    "gulp": "3.8.10",
+    "gulp-mocha": "2.0.0",
+    "gulp-istanbul": "0.5.0",
+    "eslint": "0.11.0",
+    "gulp-util": "3.0.1",
+    "through2": "0.6.3",
+    "gulp-jscs": "1.4.0",
+    "fist": ">= 3.1.1 && <= 4"
+  },
+  "peerDependencies": {
+    "fist": ">= 3.1.1 && <= 4"
+  },
+  "license": "MIT",
+  "main": "_fistlabs_unit_controller",
+  "name": "fist-fistlabs_unit_controller",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/fistlabs/fist-fistlabs_unit_controller.git"
+  },
+  "engines": {
+    "node": ">= 0.10.0"
+  },
+  "version": "0.0.1"
+}
