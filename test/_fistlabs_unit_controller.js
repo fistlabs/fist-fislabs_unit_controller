@@ -40,8 +40,8 @@ describe('_fistlabs_unit_controller', function () {
             base: '_contr',
             settings: {
                 engines: {
-                    'foo': fooEngine,
-                    'bar': path.join(__dirname, '../test/fixtures/engines/foo')
+                    foo: fooEngine,
+                    bar: path.join(__dirname, '../test/fixtures/engines/foo')
                 }
             }
         });
@@ -98,11 +98,19 @@ describe('_fistlabs_unit_controller', function () {
                     _contr: {
                         viewsDir: path.join(__dirname, '../test/fixtures/views'),
                         engines: {
-                            '.js': function (f, o, done) {done(new Error())},
+                            '.js': function (f, o, cb) {
+                                cb(new Error());
+                            },
                             '.0.js': require('../test/fixtures/engines/0'),
-                            '0.js': function (f, o, done) {done(new Error())},
-                            '0': function (f, o, done) {done(new Error())},
-                            '.xyz': function (f, o, done) {done(new Error())}
+                            '0.js': function (f, o, cb) {
+                                cb(new Error());
+                            },
+                            '.0': function (f, o, cb) {
+                                cb(new Error());
+                            },
+                            '.xyz': function (f, o, cb) {
+                                cb(new Error());
+                            }
                         }
                     }
                 }
@@ -151,7 +159,6 @@ describe('_fistlabs_unit_controller', function () {
                         end(done);
                 });
         });
-
 
         it('Should send 500 if no engine found', function (done) {
             var app = getApp({

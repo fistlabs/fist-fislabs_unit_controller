@@ -1,5 +1,5 @@
 'use strict';
 
-module.exports = function (opts) {
+module.exports = function () {
     return '0';
 };
