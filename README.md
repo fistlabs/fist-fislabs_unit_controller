@@ -40,7 +40,7 @@ The directory name view names will be resolved from
 ###```Object engines={}```
 The dictionary which provides extname->engine relation
 Supports extensions as ```bemhtml.js```, in fact it is the substring from end of view file name.
-The value may be as string and [consolidate.js](https://www.npmjs.com/package/consolidate) template signature convention function
+The value may be both string and function ([consolidate.js](https://www.npmjs.com/package/consolidate))
 
 ##API:
 
