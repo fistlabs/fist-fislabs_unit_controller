@@ -208,8 +208,33 @@ describe('_fistlabs_unit_controller', function () {
         });
     });
 
-    describe('unit.createResponseStatus()', function () {
-        it('Should respond with returned status', function (done) {
+    describe('Content-Type', function () {
+        it('Should set default content type as text/html', function (done) {
+            var app = getApp({
+                unitSettings: {
+                    _contr: {
+                        viewsDir: path.join(__dirname, '../test/fixtures/views'),
+                        engines: {
+                            '.0.js': require('../test/fixtures/engines/0')
+                        }
+                    }
+                }
+            });
+
+            app.unit({
+                name: 'index',
+                base: '_contr',
+                rule: '/',
+                defaultViewName: 'index.0.js'
+            });
+
+            supertest(app.getHandler()).
+                get('/').
+                expect('Content-Type', /text\/html/).
+                end(done);
+        });
+
+        it('Should not set default content type if already set', function (done) {
             var app = getApp({
                 unitSettings: {
                     _contr: {
@@ -226,79 +251,15 @@ describe('_fistlabs_unit_controller', function () {
                 base: '_contr',
                 rule: '/',
                 defaultViewName: 'index.0.js',
-                createResponseStatus: function () {
-                    return 201;
+                main: function (track, context) {
+                    track.header('Content-Type', 'foo/bar');
+                    return this.__base(track, context);
                 }
             });
 
             supertest(app.getHandler()).
                 get('/').
-                expect('0').
-                expect(201).
-                end(done);
-        });
-    });
-
-    describe('unit.createResponseHeader()', function () {
-        it('Should respond with returned header', function (done) {
-            var app = getApp({
-                unitSettings: {
-                    _contr: {
-                        viewsDir: path.join(__dirname, '../test/fixtures/views'),
-                        engines: {
-                            '.0.js': require('../test/fixtures/engines/0')
-                        }
-                    }
-                }
-            });
-
-            app.unit({
-                name: 'index',
-                base: '_contr',
-                rule: '/',
-                defaultViewName: 'index.0.js',
-                createResponseHeader: function () {
-                    return {
-                        'X-Foo': 'bar'
-                    };
-                }
-            });
-
-            supertest(app.getHandler()).
-                get('/').
-                expect('X-Foo', 'bar').
-                end(done);
-        });
-    });
-
-    describe('unit.createViewOpts()', function () {
-        it('Should pass returned opts to template engine', function (done) {
-            var app = getApp({
-                unitSettings: {
-                    _contr: {
-                        viewsDir: path.join(__dirname, '../test/fixtures/views'),
-                        engines: {
-                            '.0.js': require('../test/fixtures/engines/0')
-                        }
-                    }
-                }
-            });
-
-            app.unit({
-                name: 'index',
-                base: '_contr',
-                rule: '/',
-                defaultViewName: 'return-opts.0.js',
-                createViewOpts: function () {
-                    return {
-                        foo: 'bar'
-                    };
-                }
-            });
-
-            supertest(app.getHandler()).
-                get('/').
-                expect(JSON.stringify({foo:'bar'})).
+                expect('Content-Type', 'foo/bar').
                 end(done);
         });
     });
