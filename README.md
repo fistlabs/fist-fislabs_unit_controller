@@ -12,10 +12,7 @@ var app = fist({
         _fistlabs_unit_controller: {
             viewsDir: '/views',
             engines: {
-                //   as module name
-                '.jade': 'jade',
-                // as consolidate signature function
-                '.dust': require('consolidate').dust
+                '.jade': require('consolidate').jade
             }
         }
     }
@@ -51,21 +48,6 @@ Default view name
 
 ###```String unit.lookupViewName(track, context)```
 Should return template name, returns ```unit.defaultViewName``` by default.
-
-###```Number unit.createResponseStatus(track, context)```
-Should return response status code for current request. Returns 200 by default
-
-###```Object unit.createResponseHeader(track, context)```
-Should create response header dictionary. Returns
-```js
-{
-    'Content-Type': 'text/html; charset="UTF-8"'
-}
-```
-as default
-
-###```Object unit.createViewOpts(track, context)```
-Should create an object which provides view options. See [consolidate.js](https://www.npmjs.com/package/consolidate)
 
 ###```String unit.rule```
 Router rule to automatic assign the unit with request pattern

@@ -132,74 +132,27 @@ module.exports = function (app) {
          * @param {Connect} track
          * @param {Context} context
          *
-         * @returns {Number}
-         * */
-        createResponseStatus: function (track, context) {
-            /*eslint no-unused-vars: 0*/
-            return track.status();
-        },
-
-        /**
-         * @public
-         * @memberOf {_fistlabs_unit_controller}
-         * @method
-         *
-         * @param {Connect} track
-         * @param {Context} context
-         *
-         * @returns {Object}
-         * */
-        createResponseHeader: function (track, context) {
-            /*eslint no-unused-vars: 0*/
-            return {
-                'Content-Type': 'text/html; charset="UTF-8"'
-            };
-        },
-
-        /**
-         * @public
-         * @memberOf {_fistlabs_unit_controller}
-         * @method
-         *
-         * @param {Connect} track
-         * @param {Context} context
-         *
-         * @returns {Object}
-         * */
-        createViewOpts: function (track, context) {
-            return context;
-        },
-
-        /**
-         * @public
-         * @memberOf {_fistlabs_unit_controller}
-         * @method
-         *
-         * @param {Connect} track
-         * @param {Context} context
-         *
          * @returns {vow.Promise}
          * */
         main: function (track, context) {
             var viewName = this.lookupViewName(track, context);
-            var viewOpts = this.createViewOpts(track, context);
             var defer = vow.defer();
-            var self = this;
 
             viewName = path.resolve(this.settings.viewsDir, viewName);
 
-            this._render(viewName, viewOpts, function (err, responseBody) {
+            this._render(viewName, context, function (err, responseBody) {
                 if (err) {
                     defer.reject(err);
                     return;
                 }
 
-                track.
-                    status(self.createResponseStatus(track, context)).
-                    header(self.createResponseHeader(track, context)).
-                    send(responseBody);
+                if (!track.res.getHeader('Content-Type')) {
+                    track.header('Content-Type', 'text/html; charset="UTF-8"');
+                }
 
-                defer.resolve(responseBody);
+                track.send(responseBody);
+
+                defer.resolve(null);
             });
 
             return defer.promise();
