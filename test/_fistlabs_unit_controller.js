@@ -11,6 +11,10 @@ var supertest = require('supertest');
 describe('_fistlabs_unit_controller', function () {
     function getApp(params) {
         var core = fist(params);
+        core.logger.conf({
+            logLevel: 'SILENT',
+            enabled: []
+        });
         core.install(path.join(__dirname, '../_fistlabs_unit_controller'));
         core.alias('_fistlabs_unit_controller', '_contr');
         return core;
